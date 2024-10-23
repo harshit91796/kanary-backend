@@ -1,6 +1,7 @@
 const Log = require('../models/Log');
 const { logFilterSchema } = require('../validator/log.joi');
 const mongoose = require('mongoose');
+const { Parser } = require('json2csv');
 
 const getLogs = async (req, res) => {
     try {
@@ -128,7 +129,71 @@ const softDeleteLog = async (req, res) => {
     }
 }
 
+const exportLogs = async (req, res) => {
+    try {
+        const { format = 'json' } = req.query;
+        
+        
+        const { error, value } = logFilterSchema.validate(req.query);
+        if (error) {
+            return res.status(400).json({ message: 'Invalid query parameters', error: error.details });
+        }
+
+        const { actionType, startDate, endDate, includeDeleted = false, userName, userRole, userId, logId, objectId } = value;
+        
+        let query = {};
+
+        // Add filters (same as in getLogs)
+        if (actionType) query.actionType = actionType;
+        if (startDate && endDate) query.timestamp = { $gte: new Date(startDate), $lte: new Date(endDate) };
+        if (!includeDeleted) query.isDeleted = false;
+        if (userName) query.userName = userName;
+        if (userRole) query.userRole = userRole;
+        if (userId) query.userId = userId;
+        if (logId) query._id = logId;
+
+        if (objectId) {
+            if (mongoose.Types.ObjectId.isValid(objectId)) {
+                query.$or = [{ _id: objectId }, { userId: objectId }];
+            } else {
+                query.$or = [{ userName: new RegExp(objectId, 'i') }];
+            }
+        }
+
+        // Apply user-specific filter for non-admin users
+        if (!req.user.isAdmin) {
+            if (query.$or) {
+                query.$and = [{ $or: query.$or }, { userId: new mongoose.Types.ObjectId(req.user._id) }];
+                delete query.$or;
+            } else {
+                query.userId = new mongoose.Types.ObjectId(req.user._id);
+            }
+        }
+
+        const logs = await Log.find(query).sort({ timestamp: -1 });
+
+        if (format === 'csv') {
+            const fields = ['_id', 'actionType', 'userId', 'userName', 'userRole', 'timestamp', 'isDeleted'];
+            const opts = { fields };
+            const parser = new Parser(opts);
+            const csv = parser.parse(logs);
+
+            res.header('Content-Type', 'text/csv');
+            res.attachment('logs_export.csv');
+            return res.send(csv);
+        } else {
+            res.header('Content-Type', 'application/json');
+            res.attachment('logs_export.json');
+            return res.send(JSON.stringify(logs, null, 2));
+        }
+    } catch (error) {
+        console.error('Error in exportLogs:', error);
+        res.status(500).json({ message: 'Error exporting logs', error: error.message });
+    }
+};
+
 module.exports = {
     getLogs,
     softDeleteLog,
-}
+    exportLogs
+};

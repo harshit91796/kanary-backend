@@ -20,7 +20,8 @@ const logFilterSchema = Joi.object({
   logId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).optional({message: "Invalid logId format"}),  // Validates MongoDB ObjectId format
   actionType: Joi.string().optional(),
   startDate: Joi.date().iso().optional(),
-  endDate: Joi.date().iso().min(Joi.ref('startDate')).optional()
+  endDate: Joi.date().iso().min(Joi.ref('startDate')).optional(),
+  format: Joi.string().valid('csv', 'json').default('json')
 });
 
 const searchLogSchema = Joi.object({

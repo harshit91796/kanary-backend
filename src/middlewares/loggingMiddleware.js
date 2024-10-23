@@ -5,7 +5,7 @@ const logAction = async (req, res, next) => {
   const { method, originalUrl, user } = req;
   console.log('originalUrl', originalUrl , "user", req.user);
 
-  // Determine the action type based on the request
+  // action type based on the request
   let actionType;
   if (originalUrl.includes('/api/logs')) {
     if (method === 'GET') {
@@ -20,7 +20,7 @@ const logAction = async (req, res, next) => {
   } else if (originalUrl.includes('/api/users/logout')) {
     actionType = 'logout';
   } else {
-    // Default action types based on HTTP method
+    
     switch (method) {
       case 'GET':
         actionType = 'read';
@@ -40,7 +40,7 @@ const logAction = async (req, res, next) => {
     }
   }
 
-  // Capture the original json function
+  
   const originalJson = res.json;
 
   // Override the json function
@@ -64,7 +64,7 @@ const logAction = async (req, res, next) => {
       }
     };
 
-    // Asynchronously create the log entry
+    // create the log entry
     Log.create(logData).catch(error => {
       console.error('Error creating log:', error);
       logger.error('Failed to create log entry', { error: error.message, logData });

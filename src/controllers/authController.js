@@ -78,7 +78,7 @@ const loginUser = async (req, res) => {
             _id: user._id,
             name: user.name,
             email: user.email,
-            role: user.role, // Make sure to include the role
+            role: user.role, 
             isAdmin: user.isAdmin,
             token,
 
