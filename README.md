@@ -106,4 +106,12 @@ Users can export logs in either JSON or CSV format using the export endpoint.
 - joi
 - json2csv
 
+  # DockerFile
+
+  - docker build -t my-node-app .
+  - docker run -p 3000:3000 my-node-app
+  -docker-compose up --build
+
+
+
 For a complete list of dependencies, refer to the `package.json` file.
