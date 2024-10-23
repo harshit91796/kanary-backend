@@ -110,7 +110,9 @@ Users can export logs in either JSON or CSV format using the export endpoint.
 
   - docker build -t my-node-app .
   - docker run -p 3000:3000 my-node-app
-  -docker-compose up --build
+  - docker-compose up --build
+
+  
 
 
 
